@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: paywallet-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-Anas786}
+      MYSQL_DATABASE: paywallet
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  paywallet-backend:
+    build: ./backend
+    container_name: paywallet-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql-db
+      - DB_PORT=3306
+      - DB_NAME=paywallet
+      - DB_USERNAME=root
+      - DB_PASSWORD=${DB_PASSWORD:-Anas786}
+      - JWT_SECRET=${JWT_SECRET:-cGF5d2FsbGV0LWRldi1zZWNyZXQta2V5LXRoaXMtaXMtbm90LWZvci1wcm9kdWN0aW9uLXVzZS0yMDI2}
+      - JWT_EXPIRATION=86400000
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+  paywallet-frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_RAZORPAY_KEY_ID: ${VITE_RAZORPAY_KEY_ID}
+    container_name: paywallet-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - paywallet-backend
+
+volumes:
+  mysql_data:
+

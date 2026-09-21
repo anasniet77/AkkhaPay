@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-page text-stone-900 font-sans antialiased;
+  }
+
+  input, select, textarea {
+    @apply bg-surface border border-border rounded-sm px-3 py-2 text-sm
+           text-stone-900 placeholder-stone-400
+           focus:outline-none focus:border-border-focus focus:ring-0
+           transition-colors duration-150;
+  }
+}
