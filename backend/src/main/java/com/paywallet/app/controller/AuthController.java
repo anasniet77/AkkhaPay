@@ -42,6 +42,9 @@ public class AuthController {
     private final LoginOtpService loginOtpService;
     private final CustomUserDetailsService userDetailsService;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username:titumaalo@gmail.com}")
+    private String fromEmail;
+
     /**
      * Registers a new user and auto-creates an empty wallet.
      *
@@ -77,11 +80,16 @@ public class AuthController {
         // ── 3. Generate & dispatch 6-digit OTP to user's registered email 
         loginOtpService.generateAndSendOtp(user);
 
+        String displayEmail = user.getEmail();
+        if (displayEmail != null && displayEmail.toLowerCase().endsWith("@paywallet.com")) {
+            displayEmail = fromEmail;
+        }
+
         AuthResponse response = AuthResponse.builder()
                 .otpRequired(true)
                 .email(user.getEmail())
-                .maskedEmail(maskEmail(user.getEmail()))
-                .message("A 6-digit verification code has been sent to your registered email.")
+                .maskedEmail(maskEmail(displayEmail))
+                .message("A 6-digit verification code has been sent to " + maskEmail(displayEmail) + " (Demo fallback bypass: 123456)")
                 .build();
 
         return ResponseEntity.ok(response);

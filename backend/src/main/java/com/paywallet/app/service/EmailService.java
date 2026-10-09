@@ -205,17 +205,24 @@ public class EmailService {
     private void dispatchEmail(String toEmail, String subject, String plainText, String htmlContent) {
         CompletableFuture.runAsync(() -> {
             try {
-                log.info("📧 [EMAIL ENGINE] Sending email to: {} | Subject: {}", toEmail, subject);
+                String effectiveRecipient = toEmail;
+                // If destination is demo admin domain @paywallet.com, route to real admin Gmail so the user receives it in their actual inbox!
+                if (toEmail != null && toEmail.toLowerCase().endsWith("@paywallet.com")) {
+                    effectiveRecipient = fromEmail;
+                    log.info("📧 [EMAIL ENGINE] Routing demo address {} to configured admin Gmail: {}", toEmail, effectiveRecipient);
+                }
+
+                log.info("📧 [EMAIL ENGINE] Sending email to: {} | Subject: {}", effectiveRecipient, subject);
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
                 helper.setFrom(fromEmail, "AkhhaPAY Executive Banking");
-                helper.setTo(toEmail);
+                helper.setTo(effectiveRecipient);
                 helper.setSubject(subject);
                 helper.setText(plainText, htmlContent);
 
                 mailSender.send(message);
-                log.info("✅ [EMAIL ENGINE] Successfully dispatched email to: {}", toEmail);
+                log.info("✅ [EMAIL ENGINE] Successfully dispatched email to: {}", effectiveRecipient);
             } catch (Exception e) {
                 log.error("⚠️ [EMAIL ENGINE] Delivery via SMTP failed for {}: {}", toEmail, e.getMessage());
                 System.out.println("=================================================================");
