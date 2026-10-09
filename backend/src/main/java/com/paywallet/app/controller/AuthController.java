@@ -138,6 +138,18 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Liveness and health check endpoint for monitoring and cloud deployment platforms.
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> healthCheck() {
+        return ResponseEntity.ok(Map.of(
+                "status", "UP",
+                "app", "AkhhaPAY",
+                "timestamp", System.currentTimeMillis()
+        ));
+    }
+
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) return email;
         String[] parts = email.split("@");
