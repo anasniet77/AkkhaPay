@@ -175,21 +175,32 @@ public class UtilityService {
             throw new IllegalArgumentException("Razorpay payment signature verification failed");
         }
 
-        // 2. Find sender user and recipient wallet
+        // 2. Find sender user, sender wallet, and recipient wallet
         User senderUser = userRepository.findById(request.getSenderUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", request.getSenderUserId()));
+
+        Wallet senderWallet = walletRepository.findByUserId(request.getSenderUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet", "userId", request.getSenderUserId()));
 
         Wallet receiverWallet = walletRepository.findByUserId(request.getReceiverUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet", "userId", request.getReceiverUserId()));
 
-        // 3. Credit receiver wallet
+        // Verify sender wallet has sufficient funds
+        if (senderWallet.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new InsufficientBalanceException(senderWallet.getBalance(), request.getAmount());
+        }
+
+        // 3. Deduct sender wallet & Credit receiver wallet
+        senderWallet.setBalance(senderWallet.getBalance().subtract(request.getAmount()));
         receiverWallet.setBalance(receiverWallet.getBalance().add(request.getAmount()));
+
+        walletRepository.save(senderWallet);
         walletRepository.save(receiverWallet);
 
-        // 4. Save transaction record
+        // 4. Save transaction record linking both wallets
         String ref = "RPAY-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
         Transaction transaction = Transaction.builder()
-                .senderWalletId(null)
+                .senderWalletId(senderWallet.getId())
                 .receiverWalletId(receiverWallet.getId())
                 .amount(request.getAmount())
                 .transactionType(TransactionType.TRANSFER)
@@ -217,7 +228,7 @@ public class UtilityService {
                     senderUser.getFullName(),
                     request.getAmount(),
                     ref,
-                    BigDecimal.ZERO,
+                    senderWallet.getBalance(),
                     (receiverUser != null ? receiverUser.getFullName() : "User #" + request.getReceiverUserId())
             );
         }

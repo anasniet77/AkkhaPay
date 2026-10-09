@@ -78,7 +78,7 @@ public class AuthController {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
 
         // ── 3. Generate & dispatch 6-digit OTP to user's registered email 
-        String generatedOtp = loginOtpService.generateAndSendOtp(user);
+        loginOtpService.generateAndSendOtp(user);
 
         String displayEmail = user.getEmail();
         if (displayEmail != null && displayEmail.toLowerCase().endsWith("@paywallet.com")) {
@@ -89,7 +89,6 @@ public class AuthController {
                 .otpRequired(true)
                 .email(user.getEmail())
                 .maskedEmail(maskEmail(displayEmail))
-                .previewOtp(generatedOtp)
                 .message("A 6-digit verification code has been dispatched to " + maskEmail(displayEmail))
                 .build();
 
@@ -139,12 +138,11 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
 
-        String code = loginOtpService.generateAndSendOtp(user);
+        loginOtpService.generateAndSendOtp(user);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "previewOtp", code,
-                "message", "A new 6-digit OTP code has been generated."
+                "message", "A new 6-digit OTP code has been sent to " + maskEmail(user.getEmail())
         ));
     }
 
