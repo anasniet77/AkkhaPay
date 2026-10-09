@@ -4,8 +4,8 @@ services:
     name: akkhapay-app
     env: docker
     plan: free
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerfilePath: Dockerfile
+    dockerContext: .
     healthCheckPath: /api/v1/auth/health
     envVars:
       # Database Connection (Connect to any MySQL instance e.g., TiDB Cloud Serverless, Aiven, or Remote MySQL)
