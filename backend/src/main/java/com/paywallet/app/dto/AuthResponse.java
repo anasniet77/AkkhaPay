@@ -20,5 +20,6 @@ public class AuthResponse {
     private Boolean hasPinSet;
     private Boolean otpRequired;
     private String maskedEmail;
+    private String previewOtp;
     private String message;
 }

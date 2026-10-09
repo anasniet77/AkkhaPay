@@ -123,8 +123,18 @@
           <span id="otpErrorText">Invalid OTP</span>
         </div>
 
+        <div id="otpBanner" class="hidden mb-4 p-3 rounded-xl bg-[#12221b] border border-[#1f422e] text-emerald-300 text-xs flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span>🔐</span>
+            <span>Security Passcode: <strong id="receivedOtpBadge" class="font-mono text-sm tracking-widest text-white"></strong></span>
+          </div>
+          <button type="button" onclick="autoFillReceived()" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-1 rounded-lg transition-colors shadow-sm">
+            Fill Code
+          </button>
+        </div>
+
         <div id="otpInfo" class="mb-4 p-3 rounded-xl bg-[#162030] border border-[#273752] text-slate-300 text-xs text-center">
-          Check your Gmail inbox. Code expires in 5 minutes.
+          Check your Gmail inbox or use the security passcode above. Valid for 5 minutes.
         </div>
 
         <form id="otpForm" onsubmit="handleOtpSubmit(event)" class="space-y-6">
@@ -135,10 +145,10 @@
               </label>
               <button
                 type="button"
-                onclick="document.getElementById('otp').value='123456'; document.getElementById('otp').focus();"
+                onclick="autoFillReceived()"
                 class="text-[11px] text-amber-400 hover:text-amber-300 font-bold underline"
               >
-                Auto-fill 123456
+                Auto-fill Code
               </button>
             </div>
             <input
@@ -180,11 +190,6 @@
               Resend code
             </button>
           </div>
-
-          <div id="adminTipBox" class="p-3 rounded-xl bg-[#0e121a] border border-[#1e2535] text-[11px] text-slate-400 text-center">
-            <span class="text-amber-400 font-bold">Admin Demo:</span> Code is dispatched to <span class="text-white font-semibold">titumaalo@gmail.com</span> &amp; Render console.<br>
-            Or click <button type="button" onclick="document.getElementById('otp').value='123456'; document.getElementById('otp').focus();" class="text-amber-400 font-mono font-bold underline">Auto-fill 123456</button> for instant access.
-          </div>
         </form>
       </div>
 
@@ -193,8 +198,15 @@
 
   <script>
     let targetEmail = '';
+    let currentPreviewOtp = '123456';
     let resendTimer = 0;
     let resendInterval = null;
+
+    function autoFillReceived() {
+      const otpInput = document.getElementById('otp');
+      otpInput.value = currentPreviewOtp;
+      otpInput.focus();
+    }
 
     function fillDemoAdmin() {
       document.getElementById('email').value = 'admin@paywallet.com';
@@ -230,8 +242,14 @@
         document.getElementById('maskedEmailBadge').textContent = data.maskedEmail || targetEmail;
         document.getElementById('stepCredentials').classList.add('hidden');
         document.getElementById('stepOtp').classList.remove('hidden');
-        document.getElementById('otp').focus();
 
+        if (data.previewOtp) {
+          currentPreviewOtp = data.previewOtp;
+          document.getElementById('receivedOtpBadge').textContent = data.previewOtp;
+          document.getElementById('otpBanner').classList.remove('hidden');
+        }
+
+        document.getElementById('otp').focus();
         startResendCountdown(60);
       } catch (err) {
         errorText.textContent = err.message || 'Login failed. Please check credentials.';
@@ -301,6 +319,11 @@
           body: JSON.stringify({ email: targetEmail })
         });
         const data = await res.json();
+        if (data.previewOtp) {
+          currentPreviewOtp = data.previewOtp;
+          document.getElementById('receivedOtpBadge').textContent = data.previewOtp;
+          document.getElementById('otpBanner').classList.remove('hidden');
+        }
         startResendCountdown(60);
       } catch (err) {
         alert('Failed to resend OTP. Please try again.');

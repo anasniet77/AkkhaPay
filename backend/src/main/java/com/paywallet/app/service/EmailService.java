@@ -29,6 +29,9 @@ public class EmailService {
     @Value("${spring.mail.username:titumaalo@gmail.com}")
     private String fromEmail;
 
+    @Value("${resend.api.key:}")
+    private String resendApiKey;
+
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm:ss a");
 
     /**
@@ -212,7 +215,13 @@ public class EmailService {
                     log.info("📧 [EMAIL ENGINE] Routing demo address {} to configured admin Gmail: {}", toEmail, effectiveRecipient);
                 }
 
-                log.info("📧 [EMAIL ENGINE] Sending email to: {} | Subject: {}", effectiveRecipient, subject);
+                // 1. Try Resend HTTP API if configured (Port 443 — Render free tier compatible)
+                if (sendViaResend(effectiveRecipient, subject, htmlContent)) {
+                    return;
+                }
+
+                // 2. Fall back to standard JavaMail SMTP
+                log.info("📧 [EMAIL ENGINE] Dispatching via SMTP to: {} | Subject: {}", effectiveRecipient, subject);
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -222,9 +231,13 @@ public class EmailService {
                 helper.setText(plainText, htmlContent);
 
                 mailSender.send(message);
-                log.info("✅ [EMAIL ENGINE] Successfully dispatched email to: {}", effectiveRecipient);
+                log.info("✅ [EMAIL ENGINE] Successfully dispatched email via SMTP to: {}", effectiveRecipient);
             } catch (Exception e) {
-                log.error("⚠️ [EMAIL ENGINE] Delivery via SMTP failed for {}: {}", toEmail, e.getMessage());
+                log.error("⚠️ [EMAIL ENGINE] Delivery failed for {}: {}", toEmail, e.getMessage());
+                if (e.getMessage() != null && (e.getMessage().contains("Couldn't connect to host") || e.getMessage().contains("timeout"))) {
+                    log.warn("⚠️ NOTICE: Render Free Tier blocks outbound SMTP traffic (ports 25, 465, 587).");
+                    log.warn("⚠️ The OTP code has been displayed directly on the login screen for testing, and logged below.");
+                }
                 System.out.println("=================================================================");
                 System.out.println("[EMAIL FALLBACK CONSOLE] To: " + toEmail);
                 System.out.println("[EMAIL FALLBACK CONSOLE] Subject: " + subject);
@@ -232,6 +245,39 @@ public class EmailService {
                 System.out.println("=================================================================");
             }
         });
+    }
+
+    /**
+     * Dispatches email via Resend HTTP REST API over Port 443 (which is never blocked on Render).
+     */
+    private boolean sendViaResend(String toEmail, String subject, String htmlContent) {
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            return false;
+        }
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            String cleanHtml = htmlContent.replace("\"", "\\\"").replace("\n", "").replace("\r", "");
+            String jsonPayload = String.format("{\"from\":\"AkhhaPAY <onboarding@resend.dev>\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
+                    toEmail, subject.replace("\"", "\\\""), cleanHtml);
+
+            java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey.trim())
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            java.net.http.HttpResponse<String> resp = client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
+                log.info("✅ [EMAIL ENGINE] Successfully dispatched email via Resend HTTP API (Port 443) to: {}", toEmail);
+                return true;
+            } else {
+                log.warn("⚠️ [EMAIL ENGINE] Resend API response {}: {}", resp.statusCode(), resp.body());
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ [EMAIL ENGINE] Resend HTTP dispatch exception: {}", e.getMessage());
+        }
+        return false;
     }
 
     private String formatAmount(BigDecimal amount) {

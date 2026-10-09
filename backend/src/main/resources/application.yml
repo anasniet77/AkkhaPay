@@ -54,6 +54,11 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+# ── Cloud HTTP Mailer (Port 443 / Render-safe) ────────────────────────
+resend:
+  api:
+    key: ${RESEND_API_KEY:}
+
 # ── JWT Security ──────────────────────────────────────────────────────
 jwt:
   secret: ${JWT_SECRET:cGF5d2FsbGV0LWRldi1zZWNyZXQta2V5LXRoaXMtaXMtbm90LWZvci1wcm9kdWN0aW9uLXVzZS0yMDI2}
