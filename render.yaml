@@ -13,7 +13,7 @@ services:
       - key: MYSQL_ROOT_PASSWORD
         generateValue: true
       - key: MYSQL_DATABASE
-        value: paywallet
+        value: banking_wallet
 
   # 2. Backend (Web Service)
   - type: web
@@ -22,7 +22,7 @@ services:
     dockerfilePath: ./backend/Dockerfile
     envVars:
       - key: DB_URL
-        value: jdbc:mysql://paywallet-mysql:3306/paywallet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+        value: jdbc:mysql://paywallet-mysql:3306/banking_wallet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - key: DB_USERNAME
         value: root
       - key: DB_PASSWORD
@@ -32,7 +32,6 @@ services:
           envVarKey: MYSQL_ROOT_PASSWORD
       - key: JWT_SECRET
         generateValue: true
-      # Secrets (sync: false means you will input them manually in the Render dashboard)
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
@@ -42,6 +41,10 @@ services:
       - key: TWILIO_AUTH_TOKEN
         sync: false
       - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
         sync: false
 
   # 3. Frontend (Static Site)
@@ -58,7 +61,4 @@ services:
       - key: VITE_RAZORPAY_KEY_ID
         sync: false
       - key: VITE_API_BASE_URL
-        # Note: Render may assign a slightly different URL depending on availability.
-        # You can update this in the Render dashboard if the backend URL is different.
         value: https://paywallet-backend.onrender.com/api/v1
-

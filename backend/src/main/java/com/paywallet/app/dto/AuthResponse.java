@@ -17,5 +17,8 @@ public class AuthResponse {
     private String token;
     private Long userId;
     private String email;
+    private Boolean hasPinSet;
+    private Boolean otpRequired;
+    private String maskedEmail;
+    private String message;
 }
-

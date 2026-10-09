@@ -18,11 +18,9 @@ import java.math.BigDecimal;
 @Builder
 public class CreateOrderRequest {
 
-    @NotNull(message = "User ID is required")
     private Long userId;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "1.00", message = "Minimum deposit amount is 1.00")
     private BigDecimal amount;
 }
-

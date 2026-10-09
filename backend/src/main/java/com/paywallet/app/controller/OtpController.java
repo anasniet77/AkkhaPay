@@ -1,6 +1,8 @@
 package com.paywallet.app.controller;
 
+import com.paywallet.app.dto.ResendOtpRequest;
 import com.paywallet.app.dto.SendOtpRequest;
+import com.paywallet.app.service.EmailService;
 import com.paywallet.app.service.SmsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Handles OTP sending for authentication or high-value transactions.
+ * Handles OTP sending for authentication or high-value transactions across SMS and Gmail.
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -22,6 +24,7 @@ import java.util.Random;
 public class OtpController {
 
     private final SmsService smsService;
+    private final EmailService emailService;
     private final Random random = new Random();
 
     @PostMapping("/send-otp")
@@ -30,12 +33,24 @@ public class OtpController {
         String otp = String.format("%06d", random.nextInt(999999));
         
         System.out.println("=================================================");
-        System.out.println("[OTP Engine] Generated OTP for " + request.getPhoneNumber() + ": " + otp);
+        System.out.println("[SMS OTP Engine] Generated OTP for " + request.getPhoneNumber() + ": " + otp);
         System.out.println("=================================================");
         
         smsService.sendOtp(request.getPhoneNumber(), otp);
         
-        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+        return ResponseEntity.ok(Map.of("message", "SMS OTP sent successfully"));
+    }
+
+    @PostMapping("/send-email-otp")
+    public ResponseEntity<?> sendEmailOtp(@Valid @RequestBody ResendOtpRequest request) {
+        String otp = String.format("%06d", random.nextInt(999999));
+        
+        System.out.println("=================================================");
+        System.out.println("[Email OTP Engine] Generated OTP for " + request.getEmail() + ": " + otp);
+        System.out.println("=================================================");
+        
+        emailService.sendLoginOtpEmail(request.getEmail(), otp, "AkhhaPAY Customer");
+        
+        return ResponseEntity.ok(Map.of("message", "Email OTP sent successfully"));
     }
 }
-

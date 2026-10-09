@@ -1,85 +1,118 @@
 # PayWallet
 
-PayWallet is an enterprise-grade financial wallet application that allows users to manage their funds, perform peer-to-peer (P2P) transfers, and securely top-up their balance.
+A full-stack financial wallet application enabling user registration, secure JWT authentication, P2P fund transfers, and Razorpay-powered deposits.
 
 ## Architecture
 
-The application is built using a clean, separated architecture:
-- **Backend:** A robust REST API built with Java and Spring Boot, implementing stateless JWT authentication and a layered design (Controllers, Services, Repositories).
-- **Frontend:** A modern single-page application (SPA) built with React and Vite, featuring an enterprise-grade UI system and secure client-side routing.
-- **Database:** Relational data persistence handled by MySQL, with automated schema migrations via Flyway.
+```
+PayWallet/
+├── backend/          # Spring Boot REST API
+├── frontend/         # React SPA (Vite + TypeScript)
+├── docker-compose.yml
+└── render.yaml       # Render.com Blueprint
+```
+
+- **Backend:** Layered Spring Boot API — Controllers → Services → Repositories → Entities
+- **Frontend:** React SPA with protected routing, Axios interceptors, and Razorpay Checkout
+- **Database:** MySQL with Flyway-managed schema migrations
 
 ## Tech Stack
 
-- **Backend:** Java 21, Spring Boot 3.4, Maven, Spring Security (JWT), Spring Data JPA, Hibernate, Flyway
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router
-- **Database:** MySQL 8, HikariCP
-- **Integrations:** Razorpay (Payment Gateway), Twilio (SMS / OTP)
+| Layer | Technology |
+|-------|-----------|
+| Backend | Java 21, Spring Boot 3.4, Maven, Spring Security (JWT), Spring Data JPA, Hibernate, Flyway |
+| Frontend | React 19, TypeScript, Vite 6, Tailwind CSS 3, React Router 7 |
+| Database | MySQL 8, HikariCP |
+| Integrations | Razorpay (Payments), Twilio (SMS/OTP), Gmail SMTP |
 
 ## Prerequisites
 
-To run this project locally, ensure you have the following installed:
-- Node.js (v20+)
-- Java JDK (21+)
-- Maven (3.9+)
-- Docker & Docker Compose (for containerized deployment)
+- Java JDK 21+
+- Maven 3.9+
+- Node.js 20+
+- MySQL 8
+- Docker & Docker Compose (optional, for containerized deployment)
 
 ## Environment Variables
 
-Create a `.env` file in both the `backend/` and `frontend/` directories using their respective `.env.example` templates.
-
 ### Backend (`backend/.env`)
 
-| Variable | Description |
-|----------|-------------|
-| `DB_PASSWORD` | Database password (e.g., `Anas786`) |
-| `JWT_SECRET` | 256-bit Base64 encoded secret for signing JWTs |
-| `JWT_EXPIRATION` | Token validity duration in ms (default: `86400000`) |
-| `RAZORPAY_KEY_ID` | Razorpay API Key ID |
-| `RAZORPAY_KEY_SECRET` | Razorpay API Key Secret |
-| `TWILIO_ACCOUNT_SID` | Twilio Account SID |
-| `TWILIO_AUTH_TOKEN` | Twilio Auth Token |
-| `TWILIO_PHONE_NUMBER` | Twilio Phone Number (E.164 format) |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_URL` | JDBC connection URL | `jdbc:mysql://localhost:3306/banking_wallet` |
+| `DB_USERNAME` | Database username | `root` |
+| `DB_PASSWORD` | Database password | — |
+| `JWT_SECRET` | Base64-encoded JWT signing key | dev placeholder |
+| `RAZORPAY_KEY_ID` | Razorpay API Key ID | — |
+| `RAZORPAY_KEY_SECRET` | Razorpay API Key Secret | — |
+| `TWILIO_ACCOUNT_SID` | Twilio Account SID | — |
+| `TWILIO_AUTH_TOKEN` | Twilio Auth Token | — |
+| `TWILIO_PHONE_NUMBER` | Twilio sending number (E.164) | — |
+| `MAIL_USERNAME` | Gmail address for SMTP | — |
+| `MAIL_PASSWORD` | Gmail App Password | — |
 
 ### Frontend (`frontend/.env`)
 
-| Variable | Description |
-|----------|-------------|
-| `VITE_RAZORPAY_KEY_ID`| Razorpay API Key ID (public key for checkout) |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_RAZORPAY_KEY_ID` | Razorpay public key for Checkout | — |
+| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:8080/api/v1` |
 
-## Local Setup Instructions (Without Docker)
+## Local Setup
 
-1. **Database Initialization**
-   Ensure MySQL is running on port `3306` and create a database named `paywallet`.
-   ```sql
-   CREATE DATABASE paywallet;
-   ```
+### 1. Database
 
-2. **Backend Setup**
-   ```bash
-   cd backend
-   # Ensure your .env file is populated
-   mvn clean compile
-   mvn spring-boot:run
-   ```
-   The backend will start on `http://localhost:8080`. Flyway will automatically execute all database migrations.
+```sql
+CREATE DATABASE banking_wallet;
+```
 
-3. **Frontend Setup**
-   ```bash
-   cd frontend
-   # Ensure your .env file is populated
-   npm install
-   npm run dev
-   ```
-   The frontend will start on `http://localhost:5173`.
+### 2. Backend
 
-## Docker Orchestration
+```bash
+cd backend
+# Copy and fill your env file
+cp .env.example .env
 
-You can spin up the entire stack (MySQL, Backend, Frontend) using Docker Compose.
+# Build and run (Maven passes env vars from shell)
+mvn clean compile
+mvn spring-boot:run
+```
+
+The backend starts on `http://localhost:8080`. Flyway runs migrations automatically.
+
+### 3. Frontend
+
+```bash
+cd frontend
+cp .env.example .env
+
+npm install
+npm run dev
+```
+
+The frontend starts on `http://localhost:5173`.
+
+## API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/v1/auth/register` | Public | Register a new user |
+| POST | `/api/v1/auth/login` | Public | Login and receive JWT |
+| POST | `/api/v1/auth/send-otp` | Public | Send OTP via Twilio |
+| GET | `/api/v1/wallets/user/{id}` | JWT | Get wallet details |
+| POST | `/api/v1/transactions/transfer` | JWT | P2P fund transfer |
+| GET | `/api/v1/transactions/user/{id}` | JWT | Transaction history |
+| POST | `/api/v1/payments/create-order` | JWT | Create Razorpay order |
+| POST | `/api/v1/payments/verify` | JWT | Verify payment & credit wallet |
+
+## Docker
 
 ```bash
 docker-compose up --build -d
 ```
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8080`
 
+| Service | Port |
+|---------|------|
+| Frontend | `http://localhost:5173` |
+| Backend | `http://localhost:8080` |
+| MySQL | `localhost:3306` |

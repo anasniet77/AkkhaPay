@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Recharge — AkhhaPAY Corporate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0e14] text-slate-100 min-h-screen antialiased selection:bg-amber-600 selection:text-white">
+
+  <!-- Include Shared Navigation Header & Drawer -->
+  <div th:replace="~{fragments/navbar :: header('recharge')}"></div>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+    <!-- Header -->
+    <div>
+      <span class="text-xs uppercase tracking-widest text-amber-500 font-bold block mb-1">
+        Telecom Services
+      </span>
+      <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        Prepaid Mobile Recharge
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        Instant telecom recharges across major Indian operators directly from your wallet balance.
+      </p>
+    </div>
+
+    <!-- Main Recharge Form Card -->
+    <div class="bg-[#121620] border border-[#222a3a] rounded-3xl p-7 sm:p-9 shadow-xl max-w-2xl">
+      <form id="rechargeForm" onsubmit="handleRecharge(event)" class="space-y-6">
+
+        <!-- 1. Operator Selection -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+            Select Telecom Operator
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <button type="button" onclick="selectOperator('Jio')" id="opBtnJio" class="py-3 px-4 rounded-xl bg-[#1a2232] border border-amber-500/40 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+              <span>🔵 Jio</span>
+            </button>
+            <button type="button" onclick="selectOperator('Airtel')" id="opBtnAirtel" class="py-3 px-4 rounded-xl bg-[#0a0d14] border border-[#222a3a] text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+              <span>🔴 Airtel</span>
+            </button>
+            <button type="button" onclick="selectOperator('Vi')" id="opBtnVi" class="py-3 px-4 rounded-xl bg-[#0a0d14] border border-[#222a3a] text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+              <span>🟡 Vodafone Idea</span>
+            </button>
+            <button type="button" onclick="selectOperator('BSNL')" id="opBtnBSNL" class="py-3 px-4 rounded-xl bg-[#0a0d14] border border-[#222a3a] text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+              <span>🟢 BSNL</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Telecom Circle & Mobile Number -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label for="circleSelect" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Telecom Circle
+            </label>
+            <select id="circleSelect" required class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+              <option value="Delhi NCR">Delhi NCR</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Maharashtra & Goa">Maharashtra &amp; Goa</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Uttar Pradesh (East)">Uttar Pradesh (East)</option>
+              <option value="Uttar Pradesh (West)">Uttar Pradesh (West)</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="West Bengal">West Bengal</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="mobileNumber" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              10-Digit Mobile Number
+            </label>
+            <div class="relative">
+              <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-sm font-mono">+91</span>
+              <input
+                id="mobileNumber"
+                type="tel"
+                maxlength="10"
+                pattern="[6-9][0-9]{9}"
+                required
+                placeholder="9876543210"
+                class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl pl-14 pr-4 py-3 text-sm font-mono font-bold text-white placeholder-slate-600 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Plan Selector Cards -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+            Recommended Recharge Plans
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div onclick="selectPlan(199, '1.5 GB/Day, Unlimited Calls, 28 Days')" class="plan-card p-3.5 rounded-xl bg-[#0a0d14] hover:bg-[#161d2a] border border-[#222a3a] hover:border-amber-500/50 cursor-pointer transition-colors flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold font-mono text-white">₹199</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">1.5 GB/Day • 28 Days</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">Popular</span>
+            </div>
+
+            <div onclick="selectPlan(299, '2.0 GB/Day, Unlimited Calls, 28 Days')" class="plan-card p-3.5 rounded-xl bg-[#0a0d14] hover:bg-[#161d2a] border border-[#222a3a] hover:border-amber-500/50 cursor-pointer transition-colors flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold font-mono text-white">₹299</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">2.0 GB/Day • 28 Days</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold">Best Value</span>
+            </div>
+
+            <div onclick="selectPlan(666, '1.5 GB/Day, Truly Unlimited, 84 Days')" class="plan-card p-3.5 rounded-xl bg-[#0a0d14] hover:bg-[#161d2a] border border-[#222a3a] hover:border-amber-500/50 cursor-pointer transition-colors flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold font-mono text-white">₹666</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">1.5 GB/Day • 84 Days</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">Long Term</span>
+            </div>
+
+            <div onclick="selectPlan(19, '1 GB High-Speed Data Booster')" class="plan-card p-3.5 rounded-xl bg-[#0a0d14] hover:bg-[#161d2a] border border-[#222a3a] hover:border-amber-500/50 cursor-pointer transition-colors flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold font-mono text-white">₹19</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">1 GB Data Add-on booster</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">Data Only</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Recharge Amount & Security PIN -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div class="space-y-1.5">
+            <label for="rechargeAmount" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Amount (INR)
+            </label>
+            <div class="relative">
+              <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">₹</span>
+              <input
+                id="rechargeAmount"
+                type="number"
+                min="10"
+                required
+                placeholder="199"
+                class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl pl-8 pr-4 py-3 text-sm font-mono font-bold text-white placeholder-slate-600 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="rechargePin" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              4-Digit Security PIN
+            </label>
+            <input
+              id="rechargePin"
+              type="password"
+              inputmode="numeric"
+              maxlength="4"
+              pattern="[0-9]{4}"
+              required
+              placeholder="••••"
+              class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white placeholder-slate-600 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          id="rechargeBtn"
+          type="submit"
+          class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-bold text-sm py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+        >
+          <span>Authorize &amp; Execute Recharge</span>
+        </button>
+
+      </form>
+    </div>
+
+  </main>
+
+  <script>
+    let selectedOperator = 'Jio';
+    let planDetails = 'Standard Recharge Plan';
+
+    function selectOperator(op) {
+      selectedOperator = op;
+      ['Jio', 'Airtel', 'Vi', 'BSNL'].forEach(o => {
+        const btn = document.getElementById('opBtn' + o);
+        if (o === op) {
+          btn.className = 'py-3 px-4 rounded-xl bg-[#1a2232] border border-amber-500/40 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition-colors';
+        } else {
+          btn.className = 'py-3 px-4 rounded-xl bg-[#0a0d14] border border-[#222a3a] text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors';
+        }
+      });
+    }
+
+    function selectPlan(amount, details) {
+      document.getElementById('rechargeAmount').value = amount;
+      planDetails = details;
+      showToast('info', 'Selected plan: ₹' + amount + ' (' + details + ')');
+    }
+
+    async function handleRecharge(e) {
+      e.preventDefault();
+      const mobileNumber = document.getElementById('mobileNumber').value.trim();
+      const circle = document.getElementById('circleSelect').value;
+      const amount = Number(document.getElementById('rechargeAmount').value);
+      const pin = document.getElementById('rechargePin').value.trim();
+      const btn = document.getElementById('rechargeBtn');
+
+      if (!pin || pin.length !== 4) {
+        showToast('error', 'PIN must be 4 digits.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Verifying PIN &amp; Processing Recharge...</span>';
+
+      try {
+        const res = await fetch('/api/v1/utilities/recharge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            mobileNumber,
+            operator: selectedOperator,
+            circle,
+            amount,
+            planDetails,
+            pin
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Recharge failed');
+        }
+
+        showToast('success', 'Mobile Recharge of ₹' + amount + ' successful! Receipt emailed.');
+        setTimeout(() => window.location.href = '/dashboard', 1500);
+      } catch (err) {
+        showToast('error', err.message || 'Error processing recharge.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Authorize &amp; Execute Recharge</span>';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -10,9 +10,10 @@ import { useToast } from './ToastContext';
 
 // ── Types ───────────────────────────────────────────────────────────
 
-interface AuthUser {
+export interface AuthUser {
   id: number;
   email: string;
+  hasPinSet?: boolean;
 }
 
 interface AuthContextValue {
@@ -20,6 +21,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (token: string, user: AuthUser) => void;
   logout: () => void;
+  updatePinStatus: (hasPinSet: boolean) => void;
 }
 
 // ── Context ─────────────────────────────────────────────────────────
@@ -61,9 +63,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate('/login', { replace: true });
   };
 
+  const updatePinStatus = (hasPinSet: boolean) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, hasPinSet };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: user !== null, login, logout }}
+      value={{ user, isAuthenticated: user !== null, login, logout, updatePinStatus }}
     >
       {children}
     </AuthContext.Provider>
@@ -79,4 +90,3 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
-

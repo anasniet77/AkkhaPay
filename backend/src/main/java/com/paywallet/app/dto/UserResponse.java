@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO exposing user details (never exposes the password hash).
+ * Response DTO exposing user details (never exposes the password hash or PIN hash).
  */
 @Data
 @NoArgsConstructor
@@ -22,7 +22,7 @@ public class UserResponse {
     private String phone;
     private String role;
     private Boolean isActive;
+    private Boolean hasPinSet;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-

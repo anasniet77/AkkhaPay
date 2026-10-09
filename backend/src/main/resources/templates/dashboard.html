@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — AkhhaPAY Corporate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0e14] text-slate-100 min-h-screen antialiased selection:bg-amber-600 selection:text-white">
+
+  <!-- Include Shared Navigation Header & Drawer -->
+  <div th:replace="~{fragments/navbar :: header('dashboard')}"></div>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+    <!-- ── SECURITY BANNER: Missing PIN Warning ───────────────────── -->
+    <div id="missingPinBanner" class="hidden rounded-2xl bg-[#1e1710] border border-amber-600/40 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold flex-shrink-0">
+          ⚠️
+        </div>
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-amber-200">Action Required: Configure 4-Digit Security PIN</h4>
+          <p class="text-[11px] sm:text-xs text-amber-300/80 mt-0.5">Outgoing transfers and utility payments require an authorized transaction PIN code.</p>
+        </div>
+      </div>
+      <button onclick="openPinModal()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs transition-colors self-start sm:self-auto flex-shrink-0">
+        Set Up PIN Now →
+      </button>
+    </div>
+
+    <!-- ── HERO GRID: Virtual Card & Executive Account Balance ────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left: Matte Platinum Virtual Titanium Debit Card -->
+      <div class="lg:col-span-5">
+        <div class="w-full h-64 rounded-3xl bg-[#131824] border border-[#232d3f] p-6 flex flex-col justify-between shadow-xl relative overflow-hidden">
+          
+          <!-- Subtle Matte Watermark Texture -->
+          <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+
+          <!-- Card Top Row -->
+          <div class="flex items-center justify-between relative z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-[#20293d] border border-[#303d58] flex items-center justify-center text-amber-400 font-black text-xs">
+                AP
+              </div>
+              <span class="text-xs font-black tracking-widest uppercase text-slate-200">
+                PLATINUM CORPORATE
+              </span>
+            </div>
+            <span id="cardStatusBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+              ACTIVE
+            </span>
+          </div>
+
+          <!-- Card Middle: Masked Account Number -->
+          <div class="relative z-10 space-y-1">
+            <p class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Card Number</p>
+            <div class="flex items-center justify-between">
+              <span id="cardNumberText" class="text-xl sm:text-2xl font-mono tracking-widest font-black text-white">
+                4242 •••• •••• 9821
+              </span>
+              <button onclick="copyCardNumber()" title="Copy Card Number" class="p-1.5 rounded-lg bg-[#1a2130] hover:bg-[#252f44] text-slate-400 hover:text-white transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card Bottom Row: Holder, Expiry, CVV & Freeze Toggle -->
+          <div class="flex items-end justify-between relative z-10 pt-2 border-t border-[#1e2637]">
+            <div>
+              <p class="text-[9px] uppercase font-bold tracking-wider text-slate-500">Cardholder</p>
+              <p id="cardHolderName" class="text-xs font-bold text-slate-200 uppercase tracking-wide">MOHAMMAD ANAS</p>
+            </div>
+            <div>
+              <p class="text-[9px] uppercase font-bold tracking-wider text-slate-500">Expires</p>
+              <p class="text-xs font-mono font-bold text-slate-300">12/29</p>
+            </div>
+            <div>
+              <p class="text-[9px] uppercase font-bold tracking-wider text-slate-500">CVV</p>
+              <button onclick="toggleCvv()" class="text-xs font-mono font-bold text-amber-400 hover:underline">
+                <span id="cvvText">•••</span>
+              </button>
+            </div>
+            <button onclick="toggleCardFreeze()" id="freezeBtn" class="px-2.5 py-1 rounded-lg bg-[#1a2130] hover:bg-[#252f44] text-[10px] font-bold text-slate-300 transition-colors">
+              Freeze
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right: Main Balance & Cash Flow Metrics -->
+      <div class="lg:col-span-7 bg-[#121620] border border-[#222a3a] rounded-3xl p-6 sm:p-7 flex flex-col justify-between shadow-xl">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Total Liquid Balance</span>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="mainBalanceDisplay" class="text-3xl sm:text-4xl font-mono font-black text-white">₹0.00</span>
+                <span class="text-xs font-bold text-emerald-400">INR</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="/transfer" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                <span>💸 Send</span>
+              </a>
+              <a href="/add-funds" class="px-3.5 py-2 rounded-xl bg-[#1c2434] hover:bg-[#253046] border border-[#2b374e] text-white font-bold text-xs transition-colors flex items-center gap-1.5">
+                <span>💳 Deposit</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Cash Flow Metrics Grid -->
+          <div class="grid grid-cols-2 gap-4 mt-6 pt-5 border-t border-[#1c2333]">
+            <div class="p-3.5 rounded-2xl bg-[#0e121a] border border-[#1b2232]">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Inflow</span>
+              <span id="inflowDisplay" class="text-lg font-mono font-bold text-emerald-400">₹0.00</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">Credits &amp; Deposits</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-[#0e121a] border border-[#1b2232]">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Outflow</span>
+              <span id="outflowDisplay" class="text-lg font-mono font-bold text-rose-400">₹0.00</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">Debits &amp; Payments</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cash Flow Retention Bar -->
+        <div class="mt-5 pt-4 border-t border-[#1c2333]">
+          <div class="flex justify-between text-[11px] mb-1.5">
+            <span class="text-slate-400 font-semibold">Net Capital Retention</span>
+            <span id="retentionPercentText" class="font-mono font-bold text-slate-200">100%</span>
+          </div>
+          <div class="w-full h-2 rounded-full bg-[#1b2232] overflow-hidden">
+            <div id="retentionBar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 100%"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── EXECUTIVE SERVICE SHORTCUTS ────────────────────────────── -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <a href="/transfer" class="p-5 rounded-2xl bg-[#121620] hover:bg-[#181e2b] border border-[#222a3a] hover:border-[#2f3a50] transition-colors flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-[#1a2130] flex items-center justify-center text-lg">💸</div>
+        <div>
+          <h4 class="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Transfer</h4>
+          <p class="text-[10px] text-slate-400">P2P or Razorpay</p>
+        </div>
+      </a>
+      <a href="/add-funds" class="p-5 rounded-2xl bg-[#121620] hover:bg-[#181e2b] border border-[#222a3a] hover:border-[#2f3a50] transition-colors flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-[#1a2130] flex items-center justify-center text-lg">💳</div>
+        <div>
+          <h4 class="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Deposit</h4>
+          <p class="text-[10px] text-slate-400">Razorpay Gateway</p>
+        </div>
+      </a>
+      <a href="/recharge" class="p-5 rounded-2xl bg-[#121620] hover:bg-[#181e2b] border border-[#222a3a] hover:border-[#2f3a50] transition-colors flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-[#1a2130] flex items-center justify-center text-lg">📱</div>
+        <div>
+          <h4 class="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Recharge</h4>
+          <p class="text-[10px] text-slate-400">Prepaid Plans</p>
+        </div>
+      </a>
+      <a href="/bills" class="p-5 rounded-2xl bg-[#121620] hover:bg-[#181e2b] border border-[#222a3a] hover:border-[#2f3a50] transition-colors flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-[#1a2130] flex items-center justify-center text-lg">💡</div>
+        <div>
+          <h4 class="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Bill Pay</h4>
+          <p class="text-[10px] text-slate-400">Power, Gas, Water</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- ── SEARCHABLE & FILTERABLE TRANSACTION LEDGER ─────────────── -->
+    <div class="bg-[#121620] border border-[#222a3a] rounded-3xl p-6 sm:p-7 shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h3 class="text-base font-bold text-white tracking-tight">Financial Statements</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Real-time audited transaction history.</p>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Filter Tabs -->
+          <div class="flex items-center p-1 rounded-xl bg-[#0a0d14] border border-[#202738] text-[11px] font-semibold text-slate-400">
+            <button onclick="setFilter('ALL')" id="filterBtnALL" class="px-3 py-1 rounded-lg bg-[#182030] text-white font-bold">All</button>
+            <button onclick="setFilter('INFLOW')" id="filterBtnINFLOW" class="px-3 py-1 rounded-lg hover:text-white">Credits</button>
+            <button onclick="setFilter('OUTFLOW')" id="filterBtnOUTFLOW" class="px-3 py-1 rounded-lg hover:text-white">Debits</button>
+          </div>
+
+          <!-- Search Input -->
+          <input
+            id="searchInput"
+            type="text"
+            oninput="handleSearch()"
+            placeholder="Search ref or type..."
+            class="bg-[#0a0d14] border border-[#202738] rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono"
+          />
+        </div>
+      </div>
+
+      <!-- Ledger Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#1c2333] text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+              <th class="py-3 px-3">Type</th>
+              <th class="py-3 px-3">Reference ID</th>
+              <th class="py-3 px-3">Details / Direction</th>
+              <th class="py-3 px-3">Date &amp; Time</th>
+              <th class="py-3 px-3 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="transactionTableBody" class="divide-y divide-[#182030] text-xs font-mono">
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-500 font-sans">Loading transaction ledger...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── PIN SETUP MODAL ───────────────────────────────────────── -->
+  <div id="pinModalBackdrop" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-[#121620] border border-[#222a3a] rounded-3xl p-6 sm:p-7 shadow-2xl relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-white">4-Digit Security PIN</h3>
+        <button onclick="closePinModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-400 mb-5">Configure your 4-digit PIN for authorizing transfers and utility bills.</p>
+
+      <form onsubmit="handlePinSave(event)" class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Set 4-Digit PIN</label>
+          <input
+            id="modalPinInput"
+            type="password"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            required
+            placeholder="••••"
+            class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white focus:outline-none"
+          />
+        </div>
+        <button type="submit" id="modalPinSubmitBtn" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs transition-colors">
+          Save Security PIN
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let rawTransactions = [];
+    let currentFilter = 'ALL';
+    let currentWallet = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDashboardData();
+    });
+
+    async function loadDashboardData() {
+      if (!currentUser || !currentUser.id) return;
+
+      // Check PIN configuration
+      if (!currentUser.hasPinSet) {
+        document.getElementById('missingPinBanner').classList.remove('hidden');
+      }
+
+      // Fetch Profile & Full Name
+      fetch('/api/v1/users/' + currentUser.id + '/profile', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(profile => {
+        if (profile.fullName) {
+          document.getElementById('cardHolderName').textContent = profile.fullName.toUpperCase();
+        }
+      }).catch(() => {});
+
+      // Fetch Wallet
+      try {
+        const wRes = await fetch('/api/v1/wallets/user/' + currentUser.id, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        currentWallet = await wRes.json();
+        const bal = Number(currentWallet.balance || 0);
+        document.getElementById('mainBalanceDisplay').textContent = '₹' + bal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } catch (e) {}
+
+      // Fetch Transactions
+      try {
+        const tRes = await fetch('/api/v1/transactions/user/' + currentUser.id, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        rawTransactions = await tRes.json();
+        computeMetricsAndRender();
+      } catch (e) {
+        document.getElementById('transactionTableBody').innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-500 font-sans">No transactions recorded yet.</td></tr>';
+      }
+    }
+
+    function computeMetricsAndRender() {
+      let inflow = 0;
+      let outflow = 0;
+
+      if (currentWallet && Array.isArray(rawTransactions)) {
+        rawTransactions.forEach(tx => {
+          if (tx.status === 'SUCCESS') {
+            const amt = Number(tx.amount);
+            if (tx.receiverWalletId === currentWallet.id) {
+              inflow += amt;
+            } else if (tx.senderWalletId === currentWallet.id) {
+              outflow += amt;
+            }
+          }
+        });
+      }
+
+      document.getElementById('inflowDisplay').textContent = '₹' + inflow.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('outflowDisplay').textContent = '₹' + outflow.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      // Retention %
+      const totalFlow = inflow + outflow;
+      let retention = 100;
+      if (inflow > 0) {
+        retention = Math.max(0, Math.min(100, Math.round(((inflow - outflow) / inflow) * 100)));
+      }
+      document.getElementById('retentionPercentText').textContent = retention + '%';
+      document.getElementById('retentionBar').style.width = retention + '%';
+
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('transactionTableBody');
+      const search = (document.getElementById('searchInput').value || '').toLowerCase();
+
+      if (!Array.isArray(rawTransactions) || rawTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-500 font-sans">No transactions found.</td></tr>';
+        return;
+      }
+
+      const filtered = rawTransactions.filter(tx => {
+        const isCredit = currentWallet && tx.receiverWalletId === currentWallet.id;
+        if (currentFilter === 'INFLOW' && !isCredit) return false;
+        if (currentFilter === 'OUTFLOW' && isCredit) return false;
+
+        if (search) {
+          const matchRef = (tx.referenceNumber || '').toLowerCase().includes(search);
+          const matchType = (tx.transactionType || '').toLowerCase().includes(search);
+          return matchRef || matchType;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-500 font-sans">No matching records.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(tx => {
+        const isCredit = currentWallet && tx.receiverWalletId === currentWallet.id;
+        const badgeColor = isCredit ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        const sign = isCredit ? '+' : '-';
+        const amtColor = isCredit ? 'text-emerald-400' : 'text-slate-200';
+        const dateStr = tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-IN') : '--';
+
+        return `
+          <tr class="hover:bg-[#151c2a] transition-colors">
+            <td class="py-3 px-3">
+              <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeColor}">
+                ${tx.transactionType}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-slate-300 font-mono">${tx.referenceNumber}</td>
+            <td class="py-3 px-3 font-sans text-slate-400">
+              ${isCredit ? 'Credit / Inward' : 'Disbursement / Outward'}
+            </td>
+            <td class="py-3 px-3 text-slate-400 font-sans text-[11px]">${dateStr}</td>
+            <td class="py-3 px-3 text-right font-bold ${amtColor}">
+              ${sign}₹${Number(tx.amount).toFixed(2)}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      ['ALL', 'INFLOW', 'OUTFLOW'].forEach(f => {
+        const btn = document.getElementById('filterBtn' + f);
+        if (f === filter) {
+          btn.className = 'px-3 py-1 rounded-lg bg-[#182030] text-white font-bold';
+        } else {
+          btn.className = 'px-3 py-1 rounded-lg hover:text-white';
+        }
+      });
+      renderTable();
+    }
+
+    function handleSearch() {
+      renderTable();
+    }
+
+    // Card interactions
+    let isFrozen = false;
+    function toggleCardFreeze() {
+      isFrozen = !isFrozen;
+      const badge = document.getElementById('cardStatusBadge');
+      const btn = document.getElementById('freezeBtn');
+      if (isFrozen) {
+        badge.textContent = 'FROZEN';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 border border-rose-500/30 text-rose-400';
+        btn.textContent = 'Unfreeze';
+        showToast('error', 'Card has been frozen temporarily.');
+      } else {
+        badge.textContent = 'ACTIVE';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400';
+        btn.textContent = 'Freeze';
+        showToast('success', 'Card is now active.');
+      }
+    }
+
+    let showCvvState = false;
+    function toggleCvv() {
+      showCvvState = !showCvvState;
+      document.getElementById('cvvText').textContent = showCvvState ? '842' : '•••';
+    }
+
+    function copyCardNumber() {
+      navigator.clipboard.writeText('4242982187659821');
+      showToast('success', 'Card number copied to clipboard.');
+    }
+
+    // PIN Modal
+    function openPinModal() {
+      document.getElementById('pinModalBackdrop').classList.remove('hidden');
+      document.getElementById('modalPinInput').focus();
+    }
+    function closePinModal() {
+      document.getElementById('pinModalBackdrop').classList.add('hidden');
+      document.getElementById('modalPinInput').value = '';
+    }
+
+    async function handlePinSave(e) {
+      e.preventDefault();
+      const pin = document.getElementById('modalPinInput').value.trim();
+      if (pin.length !== 4) return;
+
+      try {
+        const res = await fetch('/api/v1/users/' + currentUser.id + '/pin/setup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'PIN setup failed');
+
+        currentUser.hasPinSet = true;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        document.getElementById('missingPinBanner').classList.add('hidden');
+        closePinModal();
+        showToast('success', 'Security PIN configured successfully.');
+      } catch (err) {
+        showToast('error', err.message);
+      }
+    }
+  </script>
+</body>
+</html>

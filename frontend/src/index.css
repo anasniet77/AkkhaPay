@@ -2,15 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-page text-stone-900 font-sans antialiased;
-  }
+body {
+  background-color: #020617;
+  color: #f8fafc;
+  font-family: 'Roboto', 'Open Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
 
-  input, select, textarea {
-    @apply bg-surface border border-border rounded-sm px-3 py-2 text-sm
-           text-stone-900 placeholder-stone-400
-           focus:outline-none focus:border-border-focus focus:ring-0
-           transition-colors duration-150;
-  }
+/* Custom scrollbars for tables and drawers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }

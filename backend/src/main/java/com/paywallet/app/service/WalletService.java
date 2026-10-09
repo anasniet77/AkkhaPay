@@ -8,7 +8,9 @@ import com.paywallet.app.entity.Wallet;
 import com.paywallet.app.exception.ResourceNotFoundException;
 import com.paywallet.app.repository.TransactionRepository;
 import com.paywallet.app.repository.WalletRepository;
+import com.paywallet.app.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +22,12 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WalletService {
 
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
+    private final EmailService emailService;
 
     /**
      * Returns the wallet details for a given user.
@@ -76,6 +80,22 @@ public class WalletService {
                 .build();
         
         transactionRepository.save(transaction);
+
+        // ── Dispatch Deposit Confirmation Alert ─────────────────────────
+        try {
+            User user = wallet.getUser();
+            if (user != null && user.getEmail() != null) {
+                emailService.sendDepositAlert(
+                        user.getEmail(),
+                        user.getFullName(),
+                        amount,
+                        transaction.getReferenceNumber(),
+                        wallet.getBalance()
+                );
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ Failed to dispatch deposit notification email: {}", e.getMessage());
+        }
     }
 
     // ── Mapping helper ──────────────────────────────────────────────────

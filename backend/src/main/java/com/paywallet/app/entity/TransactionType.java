@@ -6,6 +6,7 @@ package com.paywallet.app.entity;
 public enum TransactionType {
     TRANSFER,
     DEPOSIT,
-    WITHDRAWAL
+    WITHDRAWAL,
+    RECHARGE,
+    BILL_PAYMENT
 }
-

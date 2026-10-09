@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill Payments — AkhhaPAY Corporate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0e14] text-slate-100 min-h-screen antialiased selection:bg-amber-600 selection:text-white">
+
+  <!-- Include Shared Navigation Header & Drawer -->
+  <div th:replace="~{fragments/navbar :: header('bills')}"></div>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+    <!-- Header -->
+    <div>
+      <span class="text-xs uppercase tracking-widest text-amber-500 font-bold block mb-1">
+        Utility Hub
+      </span>
+      <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        Utility Bills Payment
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        Settle institutional and domestic electricity, water, gas, broadband, DTH, and FASTag dues.
+      </p>
+    </div>
+
+    <!-- Category Selector Tabs -->
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <button type="button" onclick="setCategory('Electricity')" id="catBtnElectricity" class="p-3 rounded-2xl bg-[#1a2232] border border-amber-500/40 text-amber-400 font-bold text-xs flex flex-col items-center gap-1.5 transition-colors">
+        <span class="text-lg">⚡</span>
+        <span>Electricity</span>
+      </button>
+      <button type="button" onclick="setCategory('Water')" id="catBtnWater" class="p-3 rounded-2xl bg-[#121620] border border-[#222a3a] text-slate-400 hover:text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-colors">
+        <span class="text-lg">💧</span>
+        <span>Water</span>
+      </button>
+      <button type="button" onclick="setCategory('Gas')" id="catBtnGas" class="p-3 rounded-2xl bg-[#121620] border border-[#222a3a] text-slate-400 hover:text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-colors">
+        <span class="text-lg">🔥</span>
+        <span>Piped Gas</span>
+      </button>
+      <button type="button" onclick="setCategory('Broadband')" id="catBtnBroadband" class="p-3 rounded-2xl bg-[#121620] border border-[#222a3a] text-slate-400 hover:text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-colors">
+        <span class="text-lg">🌐</span>
+        <span>Broadband</span>
+      </button>
+      <button type="button" onclick="setCategory('DTH')" id="catBtnDTH" class="p-3 rounded-2xl bg-[#121620] border border-[#222a3a] text-slate-400 hover:text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-colors">
+        <span class="text-lg">📺</span>
+        <span>DTH</span>
+      </button>
+      <button type="button" onclick="setCategory('FASTag')" id="catBtnFASTag" class="p-3 rounded-2xl bg-[#121620] border border-[#222a3a] text-slate-400 hover:text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-colors">
+        <span class="text-lg">🚗</span>
+        <span>FASTag</span>
+      </button>
+    </div>
+
+    <!-- Bill Form Card -->
+    <div class="bg-[#121620] border border-[#222a3a] rounded-3xl p-7 sm:p-9 shadow-xl max-w-xl">
+      <form id="billForm" onsubmit="handleBillPayment(event)" class="space-y-5">
+
+        <!-- Biller Board / Service Provider -->
+        <div class="space-y-1.5">
+          <label for="billerSelect" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Utility Service Provider
+          </label>
+          <select id="billerSelect" required class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl px-4 py-3 text-sm text-white focus:outline-none">
+            <!-- Dynamically populated via JS -->
+          </select>
+        </div>
+
+        <!-- Consumer ID -->
+        <div class="space-y-1.5">
+          <label for="consumerNumber" id="consumerLabel" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Consumer Account Number / CA Number
+          </label>
+          <input
+            id="consumerNumber"
+            type="text"
+            required
+            placeholder="e.g. 1002348911"
+            class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl px-4 py-3 text-sm font-mono text-white placeholder-slate-600 focus:outline-none"
+          />
+        </div>
+
+        <!-- Amount -->
+        <div class="space-y-1.5">
+          <label for="billAmount" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Bill Amount (INR)
+          </label>
+          <div class="relative">
+            <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">₹</span>
+            <input
+              id="billAmount"
+              type="number"
+              step="0.01"
+              min="1"
+              required
+              placeholder="0.00"
+              class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl pl-8 pr-4 py-3 text-sm font-mono font-bold text-white placeholder-slate-600 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Security PIN -->
+        <div class="space-y-1.5">
+          <label for="billPin" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            4-Digit Transaction Security PIN
+          </label>
+          <input
+            id="billPin"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            required
+            placeholder="••••"
+            class="w-36 bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white placeholder-slate-600 focus:outline-none"
+          />
+        </div>
+
+        <button
+          id="billSubmitBtn"
+          type="submit"
+          class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-bold text-sm py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm mt-3"
+        >
+          <span>Authorize &amp; Pay Bill</span>
+        </button>
+
+      </form>
+    </div>
+
+  </main>
+
+  <script>
+    const billerData = {
+      Electricity: [
+        'Tata Power - Delhi',
+        'BSES Rajdhani Power Limited',
+        'BSES Yamuna Power Limited',
+        'Adani Electricity Mumbai',
+        'MSEDCL Maharashtra',
+        'UPPCL Uttar Pradesh'
+      ],
+      Water: [
+        'Delhi Jal Board (DJB)',
+        'Bangalore Water Supply (BWSSB)',
+        'Brihanmumbai Municipal Corp (BMC)',
+        'Chennai Metro Water (CMWSSB)'
+      ],
+      Gas: [
+        'Indraprastha Gas Limited (IGL)',
+        'Mahanagar Gas Limited (MGL)',
+        'Gujarat Gas Limited',
+        'HP Gas (HPCL)'
+      ],
+      Broadband: [
+        'Airtel Xstream Fiber',
+        'JioFiber Broadband',
+        'ACT Fibernet',
+        'BSNL Broadband'
+      ],
+      DTH: [
+        'Tata Play (Tata Sky)',
+        'Airtel Digital TV',
+        'Dish TV India',
+        'Sun Direct DTH'
+      ],
+      FASTag: [
+        'ICICI Bank FASTag',
+        'State Bank of India (SBI) FASTag',
+        'HDFC Bank FASTag',
+        'IDFC First Bank FASTag'
+      ]
+    };
+
+    let activeCategory = 'Electricity';
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      ['Electricity', 'Water', 'Gas', 'Broadband', 'DTH', 'FASTag'].forEach(c => {
+        const btn = document.getElementById('catBtn' + c);
+        if (c === cat) {
+          btn.className = 'p-3 rounded-2xl bg-[#1a2232] border border-amber-500/40 text-amber-400 font-bold text-xs flex flex-col items-center gap-1.5 transition-colors';
+        } else {
+          btn.className = 'p-3 rounded-2xl bg-[#121620] border border-[#222a3a] text-slate-400 hover:text-white font-bold text-xs flex flex-col items-center gap-1.5 transition-colors';
+        }
+      });
+
+      // Update provider dropdown
+      populateBillers();
+
+      // Update label
+      const label = document.getElementById('consumerLabel');
+      if (cat === 'FASTag') {
+        label.textContent = 'Vehicle Registration / FASTag ID';
+      } else if (cat === 'DTH') {
+        label.textContent = 'Subscriber ID / Smartcard Number';
+      } else {
+        label.textContent = 'Consumer Account Number / CA Number';
+      }
+    }
+
+    function populateBillers() {
+      const select = document.getElementById('billerSelect');
+      const list = billerData[activeCategory] || [];
+      select.innerHTML = list.map(b => `<option value="${b}">${b}</option>`).join('');
+    }
+
+    // Init
+    populateBillers();
+
+    async function handleBillPayment(e) {
+      e.preventDefault();
+      const billerName = document.getElementById('billerSelect').value;
+      const consumerNumber = document.getElementById('consumerNumber').value.trim();
+      const amount = Number(document.getElementById('billAmount').value);
+      const pin = document.getElementById('billPin').value.trim();
+      const btn = document.getElementById('billSubmitBtn');
+
+      if (!pin || pin.length !== 4) {
+        showToast('error', 'PIN must be 4 digits.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Processing Bill Payment...</span>';
+
+      try {
+        const res = await fetch('/api/v1/utilities/bill-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            category: activeCategory,
+            billerName,
+            consumerNumber,
+            amount,
+            pin
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Bill payment failed');
+        }
+
+        showToast('success', activeCategory + ' Bill of ₹' + amount + ' paid! Receipt emailed.');
+        setTimeout(() => window.location.href = '/dashboard', 1500);
+      } catch (err) {
+        showToast('error', err.message || 'Payment execution failed.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Authorize &amp; Pay Bill</span>';
+      }
+    }
+  </script>
+</body>
+</html>

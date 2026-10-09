@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transfer Money — AkhhaPAY Corporate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Razorpay Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-[#0b0e14] text-slate-100 min-h-screen antialiased selection:bg-amber-600 selection:text-white">
+
+  <!-- Include Shared Navigation Header & Drawer -->
+  <div th:replace="~{fragments/navbar :: header('transfer')}"></div>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+    <!-- Header -->
+    <div>
+      <span class="text-xs uppercase tracking-widest text-amber-500 font-bold block mb-1">
+        Disbursement Engine
+      </span>
+      <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+        Send Funds
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">
+        Transfer funds peer-to-peer from wallet balance or via the Razorpay payment gateway interface.
+      </p>
+    </div>
+
+    <!-- Mode Selector Tabs: Direct Wallet vs Razorpay Gateway -->
+    <div class="flex items-center p-1.5 rounded-2xl bg-[#121620] border border-[#222a3a] max-w-md">
+      <button onclick="setTransferMode('WALLET')" id="modeWalletBtn" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#1a2232] text-amber-400 border border-amber-500/30">
+        Wallet-to-Wallet (PIN)
+      </button>
+      <button onclick="setTransferMode('RAZORPAY')" id="modeRazorpayBtn" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white">
+        Razorpay Express Gateway ⚡
+      </button>
+    </div>
+
+    <!-- ── FORM 1: WALLET DIRECT P2P TRANSFER ────────────────────── -->
+    <div id="walletTransferCard" class="bg-[#121620] border border-[#222a3a] rounded-3xl p-7 sm:p-9 shadow-xl max-w-xl">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#1c2434]">
+        <div>
+          <h3 class="text-sm font-bold text-white">Direct Balance Transfer</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">Instant settlement with 4-digit security PIN verification.</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold font-mono">
+          0% Fee
+        </span>
+      </div>
+
+      <form id="walletTransferForm" onsubmit="handleWalletTransfer(event)" class="space-y-5">
+        <!-- Recipient User ID -->
+        <div class="space-y-1.5">
+          <label for="recipientId" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Recipient User ID
+          </label>
+          <input
+            id="recipientId"
+            type="number"
+            required
+            placeholder="e.g. 2"
+            class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none font-mono"
+          />
+          <p class="text-[11px] text-slate-500">Numeric account ID of the beneficiary user.</p>
+        </div>
+
+        <!-- Amount -->
+        <div class="space-y-1.5">
+          <label for="transferAmount" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Transfer Amount (INR)
+          </label>
+          <div class="relative">
+            <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">₹</span>
+            <input
+              id="transferAmount"
+              type="number"
+              step="0.01"
+              min="1"
+              required
+              placeholder="0.00"
+              class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl pl-8 pr-4 py-3 text-sm font-mono font-bold text-white placeholder-slate-600 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Security PIN -->
+        <div class="space-y-1.5">
+          <label for="transferPin" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            4-Digit Transaction Security PIN
+          </label>
+          <input
+            id="transferPin"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            required
+            placeholder="••••"
+            class="w-36 bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl py-3 text-center text-xl font-mono tracking-widest text-white placeholder-slate-600 focus:outline-none"
+          />
+          <p class="text-[11px] text-slate-500">Authorized cryptographic PIN.</p>
+        </div>
+
+        <button
+          id="walletTransferBtn"
+          type="submit"
+          class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-bold text-sm py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm mt-4"
+        >
+          <span>Authorize &amp; Transfer Funds</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- ── FORM 2: RAZORPAY EXPRESS TRANSFER GATEWAY ─────────────── -->
+    <div id="razorpayTransferCard" class="hidden bg-[#121620] border border-[#222a3a] rounded-3xl p-7 sm:p-9 shadow-xl max-w-xl">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#1c2434]">
+        <div>
+          <h3 class="text-sm font-bold text-white">Razorpay Express Transfer</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">Pay via UPI / Cards / Netbanking &amp; credit beneficiary instantly.</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold">
+          Gateway Mode
+        </span>
+      </div>
+
+      <form id="razorpayTransferForm" onsubmit="handleRazorpayTransfer(event)" class="space-y-5">
+        <!-- Recipient User ID -->
+        <div class="space-y-1.5">
+          <label for="rpRecipientId" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Beneficiary User ID
+          </label>
+          <input
+            id="rpRecipientId"
+            type="number"
+            required
+            placeholder="e.g. 2"
+            class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none font-mono"
+          />
+        </div>
+
+        <!-- Amount -->
+        <div class="space-y-1.5">
+          <label for="rpAmount" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Amount (INR)
+          </label>
+          <div class="relative">
+            <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-sm">₹</span>
+            <input
+              id="rpAmount"
+              type="number"
+              step="0.01"
+              min="1"
+              required
+              placeholder="0.00"
+              class="w-full bg-[#0a0d14] border border-[#222a3a] focus:border-amber-500 rounded-xl pl-8 pr-4 py-3 text-sm font-mono font-bold text-white placeholder-slate-600 focus:outline-none"
+            />
+          </div>
+          <p class="text-[11px] text-slate-500">Opens official Razorpay Checkout interface (UPI, Google Pay, PhonePe, Cards).</p>
+        </div>
+
+        <button
+          id="rpTransferBtn"
+          type="submit"
+          class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-bold text-sm py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm mt-4"
+        >
+          <span>Open Razorpay Gateway Interface →</span>
+        </button>
+      </form>
+    </div>
+
+  </main>
+
+  <script th:inline="javascript">
+    const razorpayKey = /*[[${razorpayKeyId}]]*/ 'rzp_test_TGEgZXObLrLXH4';
+
+    function setTransferMode(mode) {
+      const walletCard = document.getElementById('walletTransferCard');
+      const rpCard = document.getElementById('razorpayTransferCard');
+      const walletBtn = document.getElementById('modeWalletBtn');
+      const rpBtn = document.getElementById('modeRazorpayBtn');
+
+      if (mode === 'WALLET') {
+        walletCard.classList.remove('hidden');
+        rpCard.classList.add('hidden');
+        walletBtn.className = 'flex-1 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#1a2232] text-amber-400 border border-amber-500/30';
+        rpBtn.className = 'flex-1 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white';
+      } else {
+        walletCard.classList.add('hidden');
+        rpCard.classList.remove('hidden');
+        rpBtn.className = 'flex-1 py-2.5 rounded-xl text-xs font-bold transition-all bg-[#1a2232] text-amber-400 border border-amber-500/30';
+        walletBtn.className = 'flex-1 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white';
+      }
+    }
+
+    // 1. Direct Wallet Transfer
+    async function handleWalletTransfer(e) {
+      e.preventDefault();
+      const recipientId = Number(document.getElementById('recipientId').value);
+      const amount = Number(document.getElementById('transferAmount').value);
+      const pin = document.getElementById('transferPin').value.trim();
+      const btn = document.getElementById('walletTransferBtn');
+
+      if (!pin || pin.length !== 4) {
+        showToast('error', 'PIN must be exactly 4 digits.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Verifying PIN &amp; Transferring...</span>';
+
+      try {
+        const res = await fetch('/api/v1/transactions/transfer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            senderUserId: currentUser.id,
+            receiverUserId: recipientId,
+            amount: amount,
+            pin: pin
+          })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Transfer failed');
+        }
+
+        showToast('success', 'Transfer completed successfully. Alert emails dispatched.');
+        setTimeout(() => window.location.href = '/dashboard', 1200);
+      } catch (err) {
+        showToast('error', err.message || 'Transfer error occurred');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Authorize &amp; Transfer Funds</span>';
+      }
+    }
+
+    // 2. Razorpay Express Gateway Transfer
+    async function handleRazorpayTransfer(e) {
+      e.preventDefault();
+      const recipientId = Number(document.getElementById('rpRecipientId').value);
+      const amount = Number(document.getElementById('rpAmount').value);
+      const btn = document.getElementById('rpTransferBtn');
+
+      if (recipientId === currentUser.id) {
+        showToast('error', 'Beneficiary must be different from sender.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Initializing Razorpay Interface...</span>';
+
+      try {
+        // Step 1: Create Order
+        const orderRes = await fetch('/api/v1/payments/create-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ userId: currentUser.id, amount: amount })
+        });
+        const orderData = await orderRes.json();
+        const orderId = orderData.orderId || orderData.id;
+
+        if (!orderRes.ok || !orderId) {
+          throw new Error(orderData.message || 'Failed to create Razorpay payment order.');
+        }
+
+        // Step 2: Open Razorpay Interface
+        const options = {
+          key: razorpayKey,
+          amount: orderData.amountInPaise || (amount * 100),
+          currency: 'INR',
+          name: 'AkhhaPAY Transfer Gateway',
+          description: 'Beneficiary Transfer to User #' + recipientId,
+          order_id: orderId,
+          prefill: {
+            email: currentUser.email,
+          },
+          theme: {
+            color: '#d97706'
+          },
+          handler: async function (response) {
+            btn.innerHTML = '<span>Verifying Gateway Payment...</span>';
+
+            // Step 3: Verify and complete transfer to recipient
+            try {
+              const verifyRes = await fetch('/api/v1/utilities/transfer-razorpay', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                  senderUserId: currentUser.id,
+                  receiverUserId: recipientId,
+                  amount: amount,
+                  orderId: response.razorpay_order_id,
+                  paymentId: response.razorpay_payment_id,
+                  signature: response.razorpay_signature
+                })
+              });
+              const verifyData = await verifyRes.json();
+
+              if (!verifyRes.ok) {
+                throw new Error(verifyData.message || 'Signature verification failed');
+              }
+
+              showToast('success', 'Razorpay Transfer completed! Recipient credited.');
+              setTimeout(() => window.location.href = '/dashboard', 1200);
+            } catch (vErr) {
+              showToast('error', vErr.message);
+              btn.disabled = false;
+              btn.innerHTML = '<span>Open Razorpay Gateway Interface →</span>';
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              btn.disabled = false;
+              btn.innerHTML = '<span>Open Razorpay Gateway Interface →</span>';
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+      } catch (err) {
+        showToast('error', err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>Open Razorpay Gateway Interface →</span>';
+      }
+    }
+  </script>
+</body>
+</html>

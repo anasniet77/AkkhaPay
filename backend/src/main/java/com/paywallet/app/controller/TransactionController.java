@@ -23,9 +23,9 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     /**
-     * Transfers funds between two users' wallets.
+     * Transfers funds between two users' wallets with mandatory PIN authentication.
      *
-     * @param request validated transfer payload (senderUserId, receiverUserId, amount)
+     * @param request validated transfer payload (senderUserId, receiverUserId, amount, pin)
      * @return 200 OK with a success message and the transaction details
      */
     @PostMapping("/transfer")
@@ -33,7 +33,8 @@ public class TransactionController {
         TransactionResponse txn = transactionService.transferFundsByUserId(
                 request.getSenderUserId(),
                 request.getReceiverUserId(),
-                request.getAmount()
+                request.getAmount(),
+                request.getPin()
         );
 
         Map<String, Object> body = new HashMap<>();
@@ -54,4 +55,3 @@ public class TransactionController {
         return ResponseEntity.ok(history);
     }
 }
-
